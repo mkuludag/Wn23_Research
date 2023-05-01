@@ -179,9 +179,16 @@ void allDisjointPaths(int graph[V][V], int s, int t) { //inputs: graph, start no
 	bool B = true;
 	int counter = 1; 
 	while (B) {
-		B = dijkstra(graph, s, t, nodePath, counter);
+		if (graph[s][t] != 0) {
+			cout << "This is the " << counter++ << " shortest disjoint path." << endl;
+			cout << "Distance from Source to Destination is " << graph[s][t] << endl;
+			cout << "Vertex traversal: " << endl;
+			cout << s << " --> " << t << endl;
+			graph[s][t] = 0;
+			graph[t][s] = 0;
+		}
+		B = dijkstra(graph, s, t, nodePath, counter++);
 		nodePath[t] = false;
-		counter++;
 	}
 	cout << "all done, no more disjoint paths possible" << endl;
 	/*bool te = dijkstra(graph, s, t, nodePath);
@@ -218,7 +225,7 @@ int main()
 						{ 8, 11, 0, 0, 0, 0, 1, 0, 7 },
 						{ 0, 0, 2, 0, 0, 0, 6, 7, 0 } };
 
-	allDisjointPaths(graph, 7, 2);
+	allDisjointPaths(graph, 8, 2);
 
 	return 0;
 }
