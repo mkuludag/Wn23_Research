@@ -20,9 +20,10 @@ int main() {
 	double overall_reliability = 60;
 
 	// Read in Adjacency Matricies: 
-	string directory = "\"adjacency_14_0_1_2_updated.txt\"";
+	string directory = "adjacency_14_0_1_2_updated.txt";
+	//cout << directory << endl;
 	Graph G(directory, start, dest);
-	G.readInputs(); //struct containing 2d vectors + graph specific threshold values
+	G.readInputs(directory); //struct containing 2d vectors + graph specific threshold values
 	G.allDisjointPaths(min_bandwidth, min_reliability, max_delay, overall_reliability);
 
 	// Call algorithm, running values for current bandwidth, reliability and delay

@@ -28,7 +28,7 @@ private:
 
 public:
 	Graph(string in, int start, int dest);  
-	void readInputs();
+	void readInputs(string dir);
 	void allDisjointPaths(double min_bandwidth, double min_reliability, double max_delay, double overall_reliability);
 	void check_st(double min_bandwidth, double min_reliability, double max_delay, int &counter, double overall_reliability);
 	bool dijkstra(vector<bool>& nodes, const double min_bandwidth, const double min_reliability, const double max_delay, int counter, double overall_reliability);
@@ -74,7 +74,7 @@ vector<vector<double>> createMat(int &N, ifstream &inFile) {
 	return matrix;
 }
 
-void Graph::readInputs() {
+void Graph::readInputs(string dir) {
 
 	// Read in txt file for 4 ad_matricies
 
@@ -85,8 +85,7 @@ void Graph::readInputs() {
 	4- Reliability Matrix
 	5- Son matrix skip edebilirsin :)
 	*/
-	string s = "\"test\"";
-	ifstream inFile("adjacency_14_0_1_2_updated.txt");
+	ifstream inFile(dir);
 	if (!inFile) {
 		cout << "Unable to open input file" << endl;
 	}
