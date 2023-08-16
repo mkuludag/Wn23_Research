@@ -7,26 +7,12 @@
 #include <sstream>
 #include <algorithm>
 
+#include "transactions.h"
+
 using namespace std;
 
 
-// Transaction struct:
-class Transaction {
-public:
-	int ID;
-	int signature;
-	std::string ASN;
-	std::vector<char> pathletID;
-	int ingressNode;
-	int egressNode;
-	double max_bdw;
-	double min_dly;
 
-	Transaction(int ID_in, int sig_in, string ASN_in, vector<char> pathletID_in, int ingressNode_in = -1, int egressNode_in = -1, double max_bdw_in = INFINITY, double min_dly_in = 0)
-		: ID(ID_in), signature(sig_in), ASN(ASN_in), pathletID(pathletID_in), ingressNode(ingressNode_in), egressNode(egressNode_in), max_bdw(max_bdw_in), min_dly(min_dly_in) {}
-
-
-};
 
 class Graph {
 private:
@@ -240,7 +226,7 @@ void Graph::allDisjointPaths(double min_bandwidth, double min_reliability, doubl
 
 
 
-//debug, assertion fail or something IDK
+//
 void Graph::updateGraph(vector<Transaction> &NewTransactions) {
 	Transactions = NewTransactions;
 	for (auto t : Transactions) {
@@ -259,8 +245,8 @@ void Graph::updateGraph(vector<Transaction> &NewTransactions) {
 		auto it = next(path.begin(), 1);
 		for (auto it2 = path.begin(); it != path.end(); it++, it2++) {
 			if (edges[*it][*it2] || edges[*it][*it2]) {
-				bandwidth[*it][*it2] = bandwidth[*it2][*it] = t.max_bdw;
-				delay[*it][*it2] = delay[*it2][*it] = t.min_dly;
+				bandwidth[*it][*it2] = bandwidth[*it2][*it] = t.min_bdw;
+				delay[*it][*it2] = delay[*it2][*it] = t.delay;
 			}
 
 		}
