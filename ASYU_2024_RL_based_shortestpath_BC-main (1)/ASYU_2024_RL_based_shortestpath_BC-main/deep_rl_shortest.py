@@ -7,6 +7,7 @@ import torch.optim as optim
 from Transactions import Transactions
 from read_matrices import read_matrices
 import os
+import matplotlib.pyplot as plt
 
 random.seed(100)
 np.random.seed(50)
@@ -42,61 +43,6 @@ def epsilon_greedy(s_curr, model, epsilon, visited):
         s_next = random.choice(unvisited_states)
     
     return s_next
-
-def train_graph_transformer(model, num_epoch, bw, gamma=0.8, epsilon=0.05, alpha=0.1):
-    print("Training the Graph Transformer model with multiple source-destination pairs...")
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
-    criterion = nn.MSELoss()
-
-    num_nodes = model.fc_in.in_features
-
-    for i in range(num_epoch):
-        # Randomly choose different source and destination nodes
-        source = random.randint(0, num_nodes - 1)
-        destination = random.randint(0, num_nodes - 1)
-        while destination == source:  # Ensure source and destination are not the same
-            destination = random.randint(0, num_nodes - 1)
-
-        s_cur = source
-        path = []
-        visited = set()  # Set to track visited nodes
-        total_delay = 0  # Track total delay
-
-        while True:
-            visited.add(s_cur)  # Mark current node as visited
-            
-            s_next = epsilon_greedy(s_cur, model, epsilon, visited)
-            hop = find_min_hop_for_current_as(all_transactions, s_cur, s_next, bw)
-            
-            # Get delay for the current hop, set high penalty if no valid hop is found
-            delay = hop.Delay if hop != -1 else 9999
-            reward = -D[s_cur][s_next] - (hop.Hop if hop != -1 else 9999) - (delay)  
-            reward = -D[s_cur][s_next] - (hop.Hop if hop != -1 else 9999)
-            reward = -D[s_cur][s_next] - (delay)  
-            #reward = -D[s_cur][s_next] - (hop.Hop if hop != -1 else 9999) - (delay)  
-
-            # Get Q-values and compute loss
-            q_values = model(torch.FloatTensor(D[s_cur]).unsqueeze(0))
-            target_q = reward + gamma * q_values[0][s_next]  # Compute target Q-value
-
-            # Update the model
-            loss = criterion(q_values[0][s_next], target_q)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            # Update current state and path
-            s_cur = s_next
-            path.append(s_cur)
-            total_delay += delay  # Accumulate delay
-
-            if s_cur == destination:
-                break
-
-        print(f"Epoch {i + 1}/{num_epoch}: Loss={loss}, Source={source}, Destination={destination}, Path={path}, Total Delay={total_delay}")
-
-    return path, model
-
 
 # Save the model weights
 def save_model_weights(model, file_path):
@@ -143,11 +89,108 @@ def find_min_hop_for_current_as(all_transactions, currentAS, nextAS, bw):
     min_hop_path = min(current_as_paths, key=lambda path: path.Hop)
     return min_hop_path
 
+
+# Modify the train_graph_transformer function
+def train_graph_transformer(model, num_epoch, bw, gamma=0.8, epsilon=0.05, alpha=0.1):
+    print("Training the Graph Transformer model with multiple source-destination pairs...")
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    criterion = nn.MSELoss()
+
+    num_nodes = model.fc_in.in_features
+
+    # For plotting
+    epoch_losses = []
+    accuracy_per_epoch = []
+
+    # Create directory for saving plots
+    plot_dir = "drl_training_figs"
+    os.makedirs(plot_dir, exist_ok=True)
+
+    for epoch in range(num_epoch):
+        source = random.randint(0, num_nodes - 1)
+        destination = random.randint(0, num_nodes - 1)
+        while destination == source:
+            destination = random.randint(0, num_nodes - 1)
+
+        s_cur = source
+        path = []
+        visited = set()
+        total_delay = 0
+        losses = []
+        correct_decisions = 0
+        total_decisions = 0
+
+        while True:
+            visited.add(s_cur)
+            s_next = epsilon_greedy(s_cur, model, epsilon, visited)
+
+            hop = find_min_hop_for_current_as(all_transactions, s_cur, s_next, bw)
+            delay = hop.Delay if hop != -1 else 9999
+            reward = -D[s_cur][s_next] - (delay)
+
+            q_values = model(torch.FloatTensor(D[s_cur]).unsqueeze(0))
+            target_q = reward + gamma * q_values[0][s_next]
+
+            loss = criterion(q_values[0][s_next], target_q)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            losses.append(loss.item())
+
+            # Track accuracy: Did the model pick the shortest hop?
+            predicted_next = torch.argmax(q_values[0]).item()
+            if predicted_next == s_next:
+                correct_decisions += 1
+            total_decisions += 1
+
+            s_cur = s_next
+            path.append(s_cur)
+            total_delay += delay
+
+            if s_cur == destination:
+                break
+
+        # Log metrics for this epoch
+        epoch_losses.append(np.mean(losses))
+        accuracy = (correct_decisions / total_decisions) * 100 if total_decisions > 0 else 0
+        accuracy_per_epoch.append(accuracy)
+
+        print(f"Epoch {epoch + 1}/{num_epoch}: Loss={epoch_losses[-1]:.4f}, Accuracy={accuracy:.2f}%, "
+              f"Source={source}, Destination={destination}, Path={path}, Total Delay={total_delay}")
+
+    # Plot metrics
+    plt.figure(figsize=(12, 5))
+
+    # Loss plot
+    plt.subplot(1, 2, 1)
+    plt.plot(epoch_losses, label="Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training Loss")
+    plt.legend()
+    plt.savefig(os.path.join(plot_dir, "training_loss.png"))
+
+    # Accuracy plot
+    plt.subplot(1, 2, 2)
+    plt.plot(accuracy_per_epoch, label="Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy (%)")
+    plt.title("Convergence of Accuracy")
+    plt.legend()
+    plt.savefig(os.path.join(plot_dir, "accuracy_convergence.png"))
+
+    plt.tight_layout()
+    plt.show()
+
+    print(f"Plots saved to {plot_dir}/")
+
+    return path, model
+
+# Example usage
 if __name__ == '__main__':
     # Path setup
-    network = 'NSFNET'
     network = 'USNET'
-    
     cur_path = os.getcwd()
     file_path = os.path.join(cur_path, network, 'network', 'adjacency_24_0_1_1_updated.txt') # adjacency_14_0_1_2_updated.txt
     D = read_matrices(file_path)
@@ -163,10 +206,7 @@ if __name__ == '__main__':
     # Initialize Graph Transformer model
     model = GraphTransformer(input_dim=num_nodes, output_dim=num_nodes)
 
-    # Train the model with varied source-destination pairs
     path, model = train_graph_transformer(model, num_epoch=500, bw=bw)
     print("Path found:", path)
 
-    # Save the model weights
     save_model_weights(model, "graph_transformer_weights_USNET.pth")
-
