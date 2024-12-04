@@ -32,9 +32,27 @@ These two files work together for training and running simulations using deep re
 The following scripts automatically generate plots once the directories and input files are correctly set up.
 
 ### `Exec_t_figure.py`
-This script generates a plot for a given link factor and network name.
+This script generates a plot for execution time
 
 **Usage**:
 ```bash
 $ python3 Exec_t_figure.py {link_factor} {network_name}
+```
+ex run: 
+```bash
+$ python3 Exec_t_figure.py d_bw NSF
+```
+
+### `Perc_RS_figure.py`
+This script generates a plot for percentage of requests serviced per time intervals
+
+**Usage**:
+```bash
+$ Perc_RS_figure.py {link factor} {network name}
+```
+
+ex run: 
+```bash
+$ Perc_RS_figure.py bw US
+```
 
