@@ -9,27 +9,32 @@ Using reinforcement learning to find the shortest paths.
 
 
 
-Training: 
-shortest_path.py
-Sizden gelen file, buna dokunmaidm diye biliyorum. File icinden degistimeniz lazim farkli graphlari icin, birkac tane comment biraktim hangi txt filelari okutmak gerektigini)
+# Project Documentation
 
-deep_rl_shortest.py + run_sim.py
-bu ikisi deep rl icin filelar. Ilki train ediyor, ikincisi simulation run edip resultlari cikartiyor. Maalesef buda otomatik degil, yani txt fillari ve isimleri manual degistirmek gerek. 
+## Overview
 
+This project contains several Python scripts for training deep reinforcement learning models to compute shortest paths, running simulations, and generating plots. Below is an explanation of each component and how to use them.
 
-Plotting: (bunlar otomatik, tek yapmak gereken sey directorylerden emin olup run etmek, asigda ornekleri var) 
+## Training
 
-Exec_t_figure.py {link factor} {network name}
+### `shortest_path.py`
+This file contains the logic for finding the shortest paths in a graph. It's configured to work with various graph input files. To use it, make sure to modify the file to load the correct graph files as indicated in the comments. The necessary `.txt` files should be specified for the graph.
 
-ex run: 
-$ python3 Exec_t_figure.py d_bw NSF
+### `deep_rl_shortest.py` & `run_sim.py`
+These two files work together for training and running simulations using deep reinforcement learning for shortest path calculation:
+- **`deep_rl_shortest.py`**: Used for training the model.
+- **`run_sim.py`**: Runs the simulation and outputs the results.
 
-Perc_RS_figure.py {link factor} {network name}
+**Note**: These files are not fully automated. You need to manually specify the `.txt` file names and other relevant details in the code.
 
-ex run: 
-$ python3 Exec_t_figure.py bw US
+## Plotting
 
+The following scripts automatically generate plots once the directories and input files are correctly set up.
 
-baska yardimci filelar: 
+### `Exec_t_figure.py`
+This script generates a plot for a given link factor and network name.
 
-metric_eval, verilen iki result.txt filelari karsilastiriyor.ister mean ister median. Biz Mediani daha cok kullandik, outlierlar cok etkilemesin diye. 
+**Usage**:
+```bash
+$ python3 Exec_t_figure.py {link_factor} {network_name}
+
